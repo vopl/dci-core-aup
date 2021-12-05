@@ -53,14 +53,17 @@ namespace dci::aup::collector
             }
 
             checkIsAbsFile(values[0]);
-            _file = values[0];
+            _file = fs::path{values[0]}.lexically_normal();
             return true;
         }
 
         if("TARGET_DEPS" == key)
         {
             checkIsAbsFiles(values);
-            _deps.insert(values.begin(), values.end());
+            for(const std::string& value : values)
+            {
+                _deps.insert(fs::path{value}.lexically_normal());
+            }
             return true;
         }
 

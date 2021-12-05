@@ -25,7 +25,7 @@ namespace dci::aup
     {
         loadMeta();
 
-        _aupStorage.reset(_storageDir);
+        _aupStorage.reset(_storageDir.string());
 
         auto prevCatalogBlob = _aupStorage.get("catalog");
         if(prevCatalogBlob)

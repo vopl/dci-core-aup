@@ -162,7 +162,7 @@ namespace dci::aup::instance
             }
 
             Storage s;
-            s.reset(path, false);
+            s.reset(path.string(), false);
             std::optional<Bytes> catalogBlob = s.get("catalog");
             if(!catalogBlob)
             {

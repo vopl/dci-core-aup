@@ -85,7 +85,7 @@ namespace dci::aup::instance
         /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
         MatchResult FilePathEntry::match(const String& value) const
         {
-            if(utils::fnmatch(_pattern.data(), value.data(), utils::fnmPathName))
+            if(utils::fnmatch(_pattern.data(), value.data(), utils::fnmPathName | dci::utils::fnmNoEscape))
             {
                 return _negative ? MatchResult::deny : MatchResult::allow;
             }

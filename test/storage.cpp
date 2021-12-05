@@ -67,8 +67,7 @@ TEST(aup, storage)
 {
     Storage s;
 
-    s.reset(std::filesystem::temp_directory_path() / utils::b2h(crypto::rnd::generate(32)));
-
+    s.reset((std::filesystem::temp_directory_path() / utils::b2h(crypto::rnd::generate(32))).string());
 
     std::set<Oid> oids;
     for(std::size_t i{}; i<10; ++i)

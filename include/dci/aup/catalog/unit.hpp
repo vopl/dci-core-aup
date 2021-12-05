@@ -13,8 +13,8 @@ namespace dci::aup::catalog
 {
     struct Unit : Object
     {
-        std::string             _name;
-        Set<std::string>   _extraAllowed;
+        std::string         _name;
+        Set<std::string>    _extraAllowed;
 
         Type type() const override {return Object::Type::unit;}
     };

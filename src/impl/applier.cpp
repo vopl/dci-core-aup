@@ -308,7 +308,7 @@ namespace dci::aup::impl
 
         if(!in)
         {
-            throw std::system_error(errno, std::generic_category(), "unable to open "+p.native());
+            throw std::system_error(errno, std::generic_category(), "unable to open "+p.string());
         }
 
         dci::Bytes blob;
@@ -327,7 +327,7 @@ namespace dci::aup::impl
                 }
                 else
                 {
-                    throw std::system_error(errno, std::generic_category(), "unable to read "+p.native());
+                    throw std::system_error(errno, std::generic_category(), "unable to read "+p.string());
                 }
             }
 
@@ -352,12 +352,12 @@ namespace dci::aup::impl
                     auto blob = fetchContent(point._ideal->_content);
                     if(!blob)
                     {
-                        if(_task & tVerbose) VERBOSE("storage missing "<<path.lexically_proximate(_place));
+                        if(_task & tVerboseMajor) VERBOSE("storage missing "<<path.lexically_proximate(_place));
                         res |= rIncompleteStorage;
                     }
                     else if(point._ideal->_content != dci::aup::catalog::identify(*blob))
                     {
-                        if(_task & tVerbose) VERBOSE("storage corrupted "<<path.lexically_proximate(_place));
+                        if(_task & tVerboseMajor) VERBOSE("storage corrupted "<<path.lexically_proximate(_place));
                         deleteContent(point._ideal->_content);
                         res |= rIncompleteStorage;
                     }
@@ -366,7 +366,7 @@ namespace dci::aup::impl
                 {
                     if(!hasContent(point._ideal->_content))
                     {
-                        if(_task & tVerbose) VERBOSE("storage missing "<<path.lexically_proximate(_place));
+                        if(_task & tVerboseMajor) VERBOSE("storage missing "<<path.lexically_proximate(_place));
                         res |= rIncompleteStorage;
                     }
                 }
@@ -384,16 +384,42 @@ namespace dci::aup::impl
             {
                 if(_task & tRemoveWrongs)
                 {
-                    if(_task & tVerbose) VERBOSE("remove wrong "<<path.lexically_proximate(_place));
+                    if(_task & tVerboseMajor) VERBOSE("remove wrong "<<path.lexically_proximate(_place));
                     res |= remove(path);
                 }
                 else
                 {
-                    if(_task & tVerbose) VERBOSE("wrong "<<path.lexically_proximate(_place));
+                    if(_task & tVerboseMinor) VERBOSE("wrong "<<path.lexically_proximate(_place));
                 }
             }
         }
 
+        //remove unwanted files
+        for(auto&[path, point] : _points)
+        {
+            if(point._realFile && !point._ideal)
+            {
+                if(extraAllowed(path))
+                {
+                    //if(_task & tVerboseMinor) VERBOSE("extra allowed "<<path.lexically_proximate(_place));
+                }
+                else
+                {
+                    if(_task & tRemoveExtra)
+                    {
+                        if(_task & tVerboseMajor) VERBOSE("remove extra "<<path.lexically_proximate(_place));
+                        res |= remove(path);
+                    }
+                    else
+                    {
+                        if(_task & tVerboseMinor) VERBOSE("extra "<<path.lexically_proximate(_place));
+                        res |= rExistsExtra;
+                    }
+                }
+            }
+        }
+
+        //create, update, fix permissions for files
         for(auto&[path, point] : _points)
         {
             _emptyDirCandidates.insert(path.parent_path());
@@ -402,33 +428,13 @@ namespace dci::aup::impl
             {
                 if(_task & tEmplaceMissings)
                 {
-                    if(_task & tVerbose) VERBOSE("emplace missing "<<path.lexically_proximate(_place));
+                    if(_task & tVerboseMajor) VERBOSE("emplace missing "<<path.lexically_proximate(_place));
                     res |= emplace(path, permsFor(point._ideal.get()), point._ideal->_content);
                 }
                 else
                 {
-                    if(_task & tVerbose) VERBOSE("missing "<<path.lexically_proximate(_place));
+                    if(_task & tVerboseMinor) VERBOSE("missing "<<path.lexically_proximate(_place));
                     res |= rExistsMissings;
-                }
-            }
-            else if(point._realFile && !point._ideal)
-            {
-                if(extraAllowed(path))
-                {
-                    //if(_task & tVerbose) VERBOSE("extra allowed "<<path.lexically_proximate(_place));
-                }
-                else
-                {
-                    if(_task & tRemoveExtra)
-                    {
-                        if(_task & tVerbose) VERBOSE("remove extra "<<path.lexically_proximate(_place));
-                        res |= remove(path);
-                    }
-                    else
-                    {
-                        if(_task & tVerbose) VERBOSE("extra "<<path.lexically_proximate(_place));
-                        res |= rExistsExtra;
-                    }
                 }
             }
             else if(point._realFile && point._ideal)
@@ -437,12 +443,12 @@ namespace dci::aup::impl
                 {
                     if(_task & tEmplaceChanges)
                     {
-                        if(_task & tVerbose) VERBOSE("wrong size, update "<<path.lexically_proximate(_place));
+                        if(_task & tVerboseMajor) VERBOSE("wrong size, update "<<path.lexically_proximate(_place));
                         res |= update(path, permsFor(point._ideal.get()), point._ideal->_content);
                     }
                     else
                     {
-                        if(_task & tVerbose) VERBOSE("wrong size "<<path.lexically_proximate(_place));
+                        if(_task & tVerboseMinor) VERBOSE("wrong size "<<path.lexically_proximate(_place));
                         res |= rExistsChanges;
                     }
                 }
@@ -450,12 +456,12 @@ namespace dci::aup::impl
                 {
                     if(_task & tEmplaceChanges)
                     {
-                        if(_task & tVerbose) VERBOSE("wrong content, update "<<path.lexically_proximate(_place));
+                        if(_task & tVerboseMajor) VERBOSE("wrong content, update "<<path.lexically_proximate(_place));
                         res |= update(path, permsFor(point._ideal.get()), point._ideal->_content);
                     }
                     else
                     {
-                        if(_task & tVerbose) VERBOSE("wrong content "<<path.lexically_proximate(_place));
+                        if(_task & tVerboseMinor) VERBOSE("wrong content "<<path.lexically_proximate(_place));
                         res |= rExistsChanges;
                     }
                 }
@@ -463,12 +469,12 @@ namespace dci::aup::impl
                 {
                     if(_task & tEmplaceChanges)
                     {
-                        if(_task & tVerbose) VERBOSE("wrong permissions, fix "<<path.lexically_proximate(_place));
+                        if(_task & tVerboseMajor) VERBOSE("wrong permissions, fix "<<path.lexically_proximate(_place));
                         fs::permissions(path, permsFor(point._ideal.get()));
                     }
                     else
                     {
-                        if(_task & tVerbose) VERBOSE("wrong permissions "<<path.lexically_proximate(_place));
+                        if(_task & tVerboseMinor) VERBOSE("wrong permissions "<<path.lexically_proximate(_place));
                         res |= rExistsChanges;
                     }
                 }
@@ -497,19 +503,19 @@ namespace dci::aup::impl
                 {
                     if(extraAllowed(path))
                     {
-                        //if(_task & tVerbose) VERBOSE("empty dir allowed "<<path.lexically_proximate(_place));
+                        //if(_task & tVerboseMinor) VERBOSE("empty dir allowed "<<path.lexically_proximate(_place));
                     }
                     else
                     {
                         if(_task & tRemoveExtra)
                         {
-                            if(_task & tVerbose) VERBOSE("remove empty dir "<<path.lexically_proximate(_place));
+                            if(_task & tVerboseMajor) VERBOSE("remove empty dir "<<path.lexically_proximate(_place));
                             res |= remove(path);
                             _emptyDirCandidates.insert(path.parent_path());
                         }
                         else
                         {
-                            if(_task & tVerbose) VERBOSE("empty dir "<<path.lexically_proximate(_place));
+                            if(_task & tVerboseMinor) VERBOSE("empty dir "<<path.lexically_proximate(_place));
                         }
                     }
                 }
@@ -534,14 +540,14 @@ namespace dci::aup::impl
             std::ofstream out{path.native().c_str(), std::ios_base::out | std::ios_base::binary};
             if(!out)
             {
-                throw std::system_error(errno, std::generic_category(), "unable to open "+path.native());
+                throw std::system_error(errno, std::generic_category(), "unable to open "+path.string());
             }
             bytes::Cursor c {blob->begin()};
             while(!c.atEnd())
             {
                 if(!out.write(static_cast<const char *>(static_cast<const void *>(c.continuousData())), c.continuousDataSize()))
                 {
-                    throw std::system_error(errno, std::generic_category(), "unable to write "+path.native());
+                    throw std::system_error(errno, std::generic_category(), "unable to write "+path.string());
                 }
 
                 c.advanceChunks(1);
@@ -551,18 +557,6 @@ namespace dci::aup::impl
         fs::permissions(path, perms);
 
         return rFixedMissings;
-    }
-
-    /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
-    uint64 Applier::remove(const fs::path& path)
-    {
-        if(fs::exists(path))
-        {
-            fs::remove_all(path);
-            return rFixedExtra;
-        }
-
-        return rOk;
     }
 
     namespace
@@ -575,6 +569,56 @@ namespace dci::aup::impl
         }
     }
 
+
+    /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
+    uint64 Applier::remove(const fs::path& path)
+    {
+        if(fs::exists(path))
+        {
+#ifdef _WIN32
+            std::error_code ec;
+            fs::remove_all(path, ec);
+            if (ec.default_error_condition() == std::errc::io_error && fs::is_regular_file(path))
+            {
+                if(_task & tVerboseMinor)
+                {
+                    VERBOSE("unable to remove "<<path<<": "<<ec);
+                }
+
+                fs::path tmp = path;
+                tmp.replace_extension(rndExtension());
+                while(fs::exists(tmp))
+                {
+                    tmp.replace_extension(rndExtension());
+                }
+
+                fs::rename(path, tmp, ec);
+                if(ec)
+                {
+                    if(_task & tVerboseMinor)
+                    {
+                        VERBOSE("unable to rename "<<path<<" -> "<<tmp<<": "<<ec);
+                    }
+
+                    return rExistsExtra;
+                }
+                else
+                {
+                    if(_task & tVerboseMinor)
+                    {
+                        VERBOSE("renamed "<<path<<" -> "<<tmp);
+                    }
+                }
+            }
+#else
+            fs::remove_all(path);
+#endif
+            return rFixedExtra;
+        }
+
+        return rOk;
+    }
+
     /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
     uint64 Applier::update(const fs::path& path, std::filesystem::perms perms, const Oid& content)
     {
@@ -585,9 +629,13 @@ namespace dci::aup::impl
             tmp.replace_extension(rndExtension());
         }
         emplace(tmp, perms, content);
-        fs::rename(tmp, path);
+        if(!(rSomeWrong & remove(path)))
+        {
+            fs::rename(tmp, path);
+            return rFixedChanges;
+        }
 
-        return rFixedChanges;
+        return rExistsChanges;
     }
 
     /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
@@ -606,7 +654,7 @@ namespace dci::aup::impl
 
         for(const std::string& pattern : _extraAllowed)
         {
-            if(dci::utils::fnmatch(pattern.c_str(), path.string().c_str(), dci::utils::fnmPathName))
+            if(dci::utils::fnmatch(pattern.c_str(), path.string().c_str(), dci::utils::fnmPathName | dci::utils::fnmNoEscape))
             {
                 return true;
             }

@@ -75,22 +75,16 @@ if(dciIntegrationStage2)
         bytes
         crypto
         logger
-        boost_program_options
     )
+
+    find_package(Boost REQUIRED COMPONENTS program_options)
+    target_link_libraries(${UNAME}-collector PRIVATE Boost::program_options)
 endif()
 
 if(dciIntegrationStage3)
     set(imageDir ${DCI_OUT_DIR}/var/aup)
     set(imageCatalogFile ${imageDir}/catalog)
     set(metaFile ${CMAKE_CURRENT_BINARY_DIR}/meta)
-
-    #####################
-    if(NOT DCI_AUP_SIGNERKEY)
-        set(DCI_AUP_SIGNERKEY $ENV{DCI_AUP_SIGNERKEY})
-    endif()
-    if(NOT DCI_AUP_SIGNERKEY)
-        set(DCI_AUP_SIGNERKEY 0000000000000000000000000000000000000000000000000000000000000000)
-    endif()
 
     #####################
     add_custom_command(OUTPUT ${metaFile}
@@ -112,14 +106,14 @@ if(dciIntegrationStage3)
     endforeach()
 
     add_custom_command(OUTPUT ${imageCatalogFile}
-        COMMAND ${UNAME}-collector
+        COMMAND ${UNAME}-collector-cmd
             --meta-file=${metaFile}
             --signer-key=${DCI_AUP_SIGNERKEY}
             --storage-dir=${imageDir}
             --with-sources
             --with-debug-for-targets
             --with-debug-for-others
-        DEPENDS ${UNAME}-collector ${metaFile}
+        DEPENDS ${UNAME}-collector ${UNAME}-collector-cmd ${metaFile}
         COMMENT "Collecting aup image in ${imageDir}"
         VERBATIM)
 

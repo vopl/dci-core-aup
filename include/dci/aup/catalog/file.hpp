@@ -34,11 +34,11 @@ namespace dci::aup::catalog
             src         = 0x31,
         };
 
-        Kind        _kind {};
-        std::string _path;
-        uint16 _perms {};
-        uint32 _size {};
-        Oid         _content {};
+        Kind            _kind {};
+        std::string     _path;
+        uint16          _perms {};
+        uint32          _size {};
+        Oid             _content {};
 
         Object::Type type() const override {return Object::Type::file;}
     };

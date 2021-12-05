@@ -26,7 +26,10 @@ namespace dci::aup::collector
 
         if("SYSLIB_IGNORE" == key)
         {
-            _syslibIgnore.insert(values.begin(), values.end());
+            for(const std::string& value : values)
+            {
+                _syslibIgnore.insert(fs::path{value}.lexically_normal().string());
+            }
             return true;
         }
 
@@ -40,11 +43,9 @@ namespace dci::aup::collector
     }
 
     /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
-    bool Meta::checkIsAbsDir(const std::string& path)
+    bool Meta::checkIsAbsDir(const std::filesystem::path& path)
     {
-        fs::path fsp{path};
-
-        if(!fsp.is_absolute() || fsp != fsp.lexically_normal() || !fs::is_directory(fsp))
+        if(!path.is_absolute() || !fs::is_directory(path))
         {
             std::cout << "not a normal absolute path to a directory: " << path << std::endl;
             return false;
@@ -54,16 +55,26 @@ namespace dci::aup::collector
     }
 
     /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
-    bool Meta::checkIsAbsFile(const std::string& path)
+    bool Meta::checkIsAbsFile(const std::filesystem::path& path)
     {
-        fs::path fsp{path};
-
-        if(!fsp.is_absolute() || fsp != fsp.lexically_normal() || !fs::is_regular_file(fsp))
+        if(!path.is_absolute() || !fs::is_regular_file(path))
         {
             std::cout << "not a normal absolute path to a file: " << path << std::endl;
             return false;
         }
 
         return true;
+    }
+
+    /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
+    bool Meta::checkIsAbsDir(const std::string& path)
+    {
+        return checkIsAbsDir(fs::path{path});
+    }
+
+    /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
+    bool Meta::checkIsAbsFile(const std::string& path)
+    {
+        return checkIsAbsFile(fs::path{path});
     }
 }

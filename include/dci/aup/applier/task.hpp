@@ -15,8 +15,10 @@ namespace dci::aup::applier
     enum Task : uint64
     {
         tNull              = 0x0,
-        tVerbose           = 0x1,
-        tCheckStorage      = 0x2,
+        tVerboseMajor      = 0x1,
+        tVerboseMinor      = 0x2,
+        tVerbose           = 0x3,
+        tCheckStorage      = 0x4,
 
         tRemoveWrongs      = 0x10,
         tEmplaceMissings   = 0x20,

@@ -26,6 +26,8 @@ namespace dci::aup::collector
     protected:
         static bool emplacePairs(const std::vector<std::string>& values, auto& dst);
 
+        static bool checkIsAbsDir(const std::filesystem::path& path);
+        static bool checkIsAbsFile(const std::filesystem::path& path);
         static bool checkIsAbsDir(const std::string& path);
         static bool checkIsAbsFile(const std::string& path);
 
@@ -53,7 +55,12 @@ namespace dci::aup::collector
     {
         for(std::size_t i{}; i<values.size(); i+=2)
         {
-            dst.emplace(values[i], values.size() > i+1 ? values[i+1] : std::string{});
+            std::string key = values[i];
+            std::string val = values.size() > i+1 ? values[i+1] : std::string{};
+
+            dst.emplace(
+                        fs::path{key}.lexically_normal().string(),
+                        fs::path{val}.lexically_normal().string());
         }
 
         return true;

@@ -35,7 +35,7 @@ namespace dci::aup::instance
             MatchResult match(const String& value) const;
         };
 
-        struct FilePathEntry //fnmatch + fnmPathName
+        struct FilePathEntry //fnmatch + fnmPathName|fnmNoEscape
             : StringEntry
         {
             MatchResult match(const String& value) const;

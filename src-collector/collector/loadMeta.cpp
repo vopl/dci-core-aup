@@ -23,7 +23,7 @@ namespace dci::aup
         std::ifstream in{_metaFile};
         if(!in)
         {
-            throw std::system_error(errno, std::generic_category(), _metaFile);
+            throw std::system_error(errno, std::generic_category(), _metaFile.string());
         }
 
         std::string line;

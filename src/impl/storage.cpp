@@ -65,7 +65,7 @@ namespace dci::aup::impl
                 std::string oidTxt;
                 for(const auto& part : de.path().lexically_relative(root))
                 {
-                    oidTxt += part;
+                    oidTxt += part.string();
                 }
 
                 if("catalog" == oidTxt)
@@ -260,10 +260,10 @@ namespace dci::aup::impl
             fs::create_directories(path.parent_path());
 
             {
-                std::FILE* out = fopen(path.native().c_str(), "wb");
+                std::FILE* out = fopen(path.string().c_str(), "wb");
                 if(!out)
                 {
-                    throw std::system_error(errno, std::generic_category(), "unable to open "+path.native());
+                    throw std::system_error(errno, std::generic_category(), "unable to open "+path.string());
                 }
                 utils::AtScopeExit se{[&]{fclose(out);}};
 
@@ -273,7 +273,7 @@ namespace dci::aup::impl
                     uint32 s = c.continuousDataSize();
                     if(s != fwrite(c.continuousData(), 1, s, out))
                     {
-                        throw std::system_error(errno, std::generic_category(), "unable to write "+path.native());
+                        throw std::system_error(errno, std::generic_category(), "unable to write "+path.string());
                     }
 
                     c.advanceChunks(1);
@@ -299,10 +299,10 @@ namespace dci::aup::impl
             fs::create_directories(path.parent_path());
 
             {
-                std::FILE* out = fopen(path.native().c_str(), "wb");
+                std::FILE* out = fopen(path.string().c_str(), "wb");
                 if(!out)
                 {
-                    throw std::system_error(errno, std::generic_category(), "unable to open "+path.native());
+                    throw std::system_error(errno, std::generic_category(), "unable to open "+path.string());
                 }
                 utils::AtScopeExit se = {[&]{fclose(out);}};
 
@@ -318,7 +318,7 @@ namespace dci::aup::impl
 
                     if(s != fwrite(buf, 1, s, out))
                     {
-                        throw std::system_error(errno, std::generic_category(), "unable to write "+path.native());
+                        throw std::system_error(errno, std::generic_category(), "unable to write "+path.string());
                     }
 
                     if(s != sizeof(buf))
@@ -386,16 +386,16 @@ namespace dci::aup::impl
             Bytes blob;
 
             {
-                std::FILE* in = fopen(path.native().c_str(), "rb");
+                std::FILE* in = fopen(path.string().c_str(), "rb");
                 if(!in)
                 {
-                    throw std::system_error(errno, std::generic_category(), "unable to open "+path.native());
+                    throw std::system_error(errno, std::generic_category(), "unable to open "+path.string());
                 }
                 utils::AtScopeExit se = {[&]{fclose(in);}};
 
                 if(fseek(in, offset, SEEK_SET))
                 {
-                    throw std::system_error(errno, std::generic_category(), "unable to seek "+path.native());
+                    throw std::system_error(errno, std::generic_category(), "unable to seek "+path.string());
                 }
 
                 bytes::Alter a {blob.end()};

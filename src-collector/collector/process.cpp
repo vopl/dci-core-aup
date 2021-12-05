@@ -58,7 +58,7 @@ namespace dci::aup
 
         if(!in)
         {
-            throw std::system_error(errno, std::generic_category(), "unable to open "+p.native());
+            throw std::system_error(errno, std::generic_category(), "unable to open "+p.string());
         }
 
         dci::Bytes blob;
@@ -77,7 +77,7 @@ namespace dci::aup
                 }
                 else
                 {
-                    throw std::system_error(errno, std::generic_category(), "unable to read "+p.native());
+                    throw std::system_error(errno, std::generic_category(), "unable to read "+p.string());
                 }
             }
 
@@ -95,11 +95,11 @@ namespace dci::aup
     collector::AbsAndRel Collector::absAndRel(const collector::Meta& meta, const fs::path& file)
     {
         assert(file.is_absolute());
-        assert(file.string() == file.lexically_normal().string());
+        assert(file == file.lexically_normal());
 
         for(const auto&[pattern, dir] : meta._syslibMapTo)
         {
-            if(dci::utils::fnmatch(pattern.c_str(), file.c_str(), dci::utils::fnmFileName))
+            if(dci::utils::fnmatch(pattern.c_str(), file.string().c_str(), dci::utils::fnmFileName | dci::utils::fnmNoEscape))
             {
                 collector::AbsAndRel res;
                 res.abs() = file;
@@ -131,7 +131,7 @@ namespace dci::aup
 
         for(const std::string& pattern : meta._syslibIgnore)
         {
-            if(dci::utils::fnmatch(pattern.c_str(), file.c_str(), dci::utils::fnmFileName))
+            if(dci::utils::fnmatch(pattern.c_str(), file.string().c_str(), dci::utils::fnmFileName | dci::utils::fnmNoEscape))
             {
                 return {};
             }
@@ -159,6 +159,15 @@ namespace dci::aup
         (void)meta;
 
         std::string dbgFile;
+#ifdef _WIN32
+        fs::path dbgFileAbs = file.abs();
+        dbgFileAbs.replace_extension(dbgFileAbs.extension().string()+".debug");
+        if(!fs::exists(dbgFileAbs))
+        {
+            return{};
+        }
+        dbgFile = dbgFileAbs.filename().string();
+#else
         {
             std::string cmd = std::string{"readelf --string-dump=.gnu_debuglink "} + file.abs().string() + " 2>&1";
             FILE* pipe = popen(cmd.c_str(), "re");
@@ -206,6 +215,7 @@ namespace dci::aup
         {
             return {};
         }
+#endif
 
         collector::AbsAndRel dbg = file;
         dbg.abs().replace_filename(dbgFile);
@@ -222,7 +232,7 @@ namespace dci::aup
         {
             catalog::FilePtr dbgF{std::make_unique<catalog::File>()};
             dbgF->_kind = catalog::File::Kind::debug;
-            dbgF->_path = dbg.rel();
+            dbgF->_path = dbg.rel().string();
             dbgF->_perms = static_cast<uint16>(fs::status(dbg.abs()).permissions()) & 0777;
             dbgF->_size = static_cast<uint32>(fs::file_size(dbg.abs()));
             dbgF->_content = processFileContent(dbg.abs());
@@ -236,6 +246,9 @@ namespace dci::aup
     /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
     std::set<collector::AbsAndRel>  Collector::processFile(const collector::Meta& meta, const collector::AbsAndRel& file, catalog::File::Kind kind, const std::set<collector::AbsAndRel>& deps)
     {
+        assert(file.abs().is_absolute());
+        assert(file.abs() == file.abs().lexically_normal());
+
         if(file.abs().empty())
         {
             return {};
@@ -260,7 +273,7 @@ namespace dci::aup
         }
 
         f->_kind = kind;
-        f->_path = file.rel();
+        f->_path = file.rel().string();
         f->_perms = static_cast<uint16>(fs::status(file.abs()).permissions()) & 0777;
         f->_size = static_cast<uint32>(fs::file_size(file.abs()));
         f->_content = processFileContent(file.abs());
@@ -273,7 +286,7 @@ namespace dci::aup
     std::set<collector::AbsAndRel>  Collector::processFile(const collector::Meta& meta, const fs::path& file, catalog::File::Kind kind, const std::set<collector::AbsAndRel>& deps)
     {
         assert(file.is_absolute());
-        assert(file.string() == file.lexically_normal().string());
+        assert(file == file.lexically_normal());
 
         return processFile(meta, absAndRel(meta, file), kind, deps);
     }
@@ -302,8 +315,9 @@ namespace dci::aup
             {
                 if(entry.is_regular_file())
                 {
-                    fs::path relFile = dir.rel()/fs::relative(entry.path(), dir.abs());
-                    res += processFile(meta, collector::AbsAndRel{entry.path(), relFile}, kind, {});
+                    fs::path absFile = (dir.abs()/entry.path()).lexically_normal();
+                    fs::path relFile = (dir.rel()/entry.path().lexically_relative(dir.abs())).lexically_normal();
+                    res += processFile(meta, collector::AbsAndRel{absFile, relFile}, kind, {});
                 }
             }
         }

@@ -68,7 +68,7 @@ namespace dci::aup
 
             std::time_t t = static_cast<std::time_t>(r->_moment);
             char buf[64];
-            buf[strftime(buf, sizeof(buf), "%F %T %Z", std::localtime(&t))] = 0;
+            buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S %Z", std::localtime(&t))] = 0;
             LOGI("moment                 : "<<buf);
 
             LOGI("provider               : "<<r->_provider);
@@ -193,7 +193,7 @@ namespace dci::aup
     /////////0/////////1/////////2/////////3/////////4/////////5/////////6/////////7
     void Instance::updateTarget()
     {
-        applier::Result res{applier::Result::rOk};
+        applier::Result res{};
 
         {
             impl::Applier a;
@@ -205,7 +205,7 @@ namespace dci::aup
                 a.addRoot(k, v);
             }
 
-            res = a.process(_targetDir, static_cast<applier::Task>(
+            res = a.process(_targetDir.string(), static_cast<applier::Task>(
                                 applier::tVerbose |
                                 applier::tRemoveWrongs |
                                 applier::tEmplaceMissings |

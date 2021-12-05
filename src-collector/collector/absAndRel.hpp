@@ -14,9 +14,9 @@ namespace dci::aup::collector
 {
     namespace fs = std::filesystem;
 
-    struct AbsAndRel : std::tuple<fs::path, fs::path>
+    struct AbsAndRel : std::pair<fs::path, fs::path>
     {
-        using tuple::tuple;
+        using pair::pair;
 
               fs::path& abs()       {return std::get<0>(*this);}
         const fs::path& abs() const {return std::get<0>(*this);}

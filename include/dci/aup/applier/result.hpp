@@ -20,10 +20,12 @@ namespace dci::aup::applier
         rAmbiguousCatalog  = 0x02,
         rIncompleteCatalog = 0x04,
         rIncompleteStorage = 0x08,
+        rSomeFailed        = 0x0f,
 
         rExistsMissings    = 0x10,
         rExistsChanges     = 0x20,
         rExistsExtra       = 0x40,
+        rSomeWrong         = 0xf0,
 
         rFixedMissings     = 0x100,
         rFixedChanges      = 0x200,

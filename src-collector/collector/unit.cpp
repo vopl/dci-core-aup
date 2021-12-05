@@ -16,7 +16,10 @@ namespace dci::aup::collector
     {
         if("EXTRA_ALLOWED" == key)
         {
-            _extraAllowed.insert(values.begin(), values.end());
+            for(const std::string& value : values)
+            {
+                _extraAllowed.insert(fs::path{value}.lexically_normal().string());
+            }
             return true;
         }
 

@@ -67,13 +67,13 @@ namespace dci::aup::impl
         bool extraAllowed(fs::path path);
 
     private:
-        std::set<Catalog *>                                 _catalogs;
-        std::set<Storage *>                                 _storages;
-        std::map<Oid, Set<aup::catalog::File::Kind>>   _roots;
+        std::set<Catalog *>                             _catalogs;
+        std::set<Storage *>                             _storages;
+        std::map<Oid, Set<aup::catalog::File::Kind>>    _roots;
 
     private:
         fs::path    _place;
-        uint64 _task {};
+        uint64      _task {};
 
     private:
         struct Point
@@ -87,7 +87,7 @@ namespace dci::aup::impl
 
             bool                    _realFile;
             fs::perms               _realPerms  {fs::perms::unknown};
-            uint64             _realSize   {};
+            uint64                  _realSize   {};
         };
 
         std::set<Oid>               _traversed;
