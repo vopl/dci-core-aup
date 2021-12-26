@@ -629,13 +629,13 @@ namespace dci::aup
         {
             release->_srcBranch = dci::integration::info::srcBranch();
             release->_srcRevision = dci::integration::info::srcRevision();
+            release->_srcMoment = dci::integration::info::srcMoment();
 
             release->_platformOs = dci::integration::info::platformOs();
             release->_platformArch = dci::integration::info::platformArch();
             release->_compiler = dci::integration::info::compiler();
             release->_compilerVersion = dci::integration::info::compilerVersion();
             release->_compilerOptimization = dci::integration::info::compilerOptimization();
-            release->_moment = static_cast<uint64>(std::time(nullptr));
 
             release->_provider = dci::integration::info::provider();
             release->_stability = 0;

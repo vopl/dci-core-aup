@@ -15,13 +15,13 @@ namespace dci::aup::catalog
     {
         String _srcBranch;
         String _srcRevision;
+        uint64 _srcMoment {};//unix time
 
         String _platformOs;
         String _platformArch;
         String _compiler;
         String _compilerVersion;
         String _compilerOptimization;
-        uint64 _moment {};//unix time
 
         String _provider;
         uint32 _stability {};

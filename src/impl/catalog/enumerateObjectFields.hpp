@@ -46,13 +46,13 @@ namespace dci::aup::impl::catalog
 
                 f(c->_srcBranch);
                 f(c->_srcRevision);
+                f(stiac::smallIntegral(c->_srcMoment));
 
                 f(c->_platformOs);
                 f(c->_platformArch);
                 f(c->_compiler);
                 f(c->_compilerVersion);
                 f(c->_compilerOptimization);
-                f(stiac::smallIntegral(c->_moment));
 
                 f(c->_provider);
                 f(stiac::smallIntegral(c->_stability));

@@ -7,6 +7,7 @@
 
 #include <dci/exception.hpp>
 #include <dci/logger.hpp>
+#include <dci/integration/info.hpp>
 #include <boost/program_options.hpp>
 #include "collector.hpp"
 
@@ -65,7 +66,7 @@ int main(int argc, char* argv[])
         ////////////////////////////////////////////////////////////////////////////////
         if(vars.empty() || vars.count("version"))
         {
-            std::cout << "this is a version info" << std::endl;
+            std::cout << dci::integration::info::version() << std::endl;
             return EXIT_SUCCESS;
         }
 

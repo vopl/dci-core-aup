@@ -15,6 +15,7 @@
 #include <dci/utils/b2h.hpp>
 #include <dci/utils/h2b.hpp>
 
+#include "dci/integration/info.hpp"
 #include "impl/applier.hpp"
 #include "impl/catalog/serializeObject.hpp"
 #include "impl/catalog/deserializeObject.hpp"
@@ -60,16 +61,18 @@ namespace dci::aup
             LOGI("srcBranch              : "<<r->_srcBranch);
             LOGI("srcRevision            : "<<r->_srcRevision);
 
+            std::time_t t = static_cast<std::time_t>(r->_srcMoment);
+            char buf[64];
+            buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S %Z", std::gmtime(&t))] = 0;
+            LOGI("srcMoment              : "<<buf);
+
+            LOGI("(version)              : "<<integration::info::version(r->_srcBranch, r->_srcRevision, r->_srcMoment));
+
             LOGI("platformOs             : "<<r->_platformOs);
             LOGI("platformArch           : "<<r->_platformArch);
             LOGI("compiler               : "<<r->_compiler);
             LOGI("compilerVersion        : "<<r->_compilerVersion);
             LOGI("compilerOptimization   : "<<r->_compilerOptimization);
-
-            std::time_t t = static_cast<std::time_t>(r->_moment);
-            char buf[64];
-            buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S %Z", std::localtime(&t))] = 0;
-            LOGI("moment                 : "<<buf);
 
             LOGI("provider               : "<<r->_provider);
             LOGI("stability              : "<<r->_stability);
@@ -1039,21 +1042,21 @@ namespace dci::aup
             const Set<Oid>& allReleases)
     {
         using Key = std::tuple<
-            String,                // srcBranch
-            String,                // platformOs
-            String,                // platformArch
-            //String,                // compiler
-            //String,                // compilerVersion
-            //String,                // compilerOptimization
-            String,                // provider
-            //uint32,                // stability
+            String,           // srcBranch
+            String,           // platformOs
+            String,           // platformArch
+            //String,           // compiler
+            //String,           // compilerVersion
+            //String,           // compilerOptimization
+            String,           // provider
+            //uint32,           // stability
             Array<uint8, 32>  // signer
         >;
         struct Value
         {
             Oid                 _oid{};
             catalog::ReleasePtr _r;
-            uint64         _moment{};
+            uint64              _srcMoment{};
         };
 
         std::map<Key, Value> mostReleases;
@@ -1061,6 +1064,11 @@ namespace dci::aup
         for(const Oid& oid : allReleases)
         {
             catalog::ReleasePtr r = catalog::objectPtrCast<catalog::Release>(_catalog.get(oid));
+
+            if(!r)
+            {
+                continue;
+            }
 
             if(!match(r.get(), criterias))
             {
@@ -1079,10 +1087,10 @@ namespace dci::aup
                 //r->_stability,
                 r->_signer};
             Value& prev = mostReleases[key];
-            if(prev._moment < r->_moment)
+            if(!prev._r || prev._srcMoment < r->_srcMoment)
             {
                 prev._oid = oid;
-                prev._moment = r->_moment;
+                prev._srcMoment = r->_srcMoment;
                 prev._r = std::move(r);
             }
         }
